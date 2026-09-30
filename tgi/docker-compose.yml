@@ -1,0 +1,49 @@
+# docker-compose.yml — REAL Hugging Face TGI (requires an NVIDIA GPU + nvidia-container-toolkit)
+#
+# This is NOT the CPU/demo backend used elsewhere in this project — this
+# runs the actual Hugging Face TGI server from its official Docker image.
+#
+# Usage:
+#   1. Install Docker + the NVIDIA Container Toolkit on a machine with a
+#      CUDA-capable GPU (see tgi/README.md).
+#   2. From this directory:  docker compose up
+#   3. TGI will be reachable at http://localhost:8080
+#      (OpenAI-compatible API at http://localhost:8080/v1/chat/completions)
+#
+# The dashboard frontend can then be pointed at this real TGI server
+# instead of the CPU/demo backend by changing API_BASE in frontend/app.js
+# and adapting request shapes to TGI's actual API where they differ
+# (TGI's native /generate schema is not identical to this project's demo
+# /generate schema — see tgi/README.md for the real TGI request format).
+
+version: "3.9"
+
+services:
+  tgi:
+    image: ghcr.io/huggingface/text-generation-inference:latest
+    container_name: real-tgi-server
+    ports:
+      - "8080:80"
+    volumes:
+      - ./data:/data
+    environment:
+      - MODEL_ID=${MODEL_ID:-meta-llama/Llama-3.2-1B-Instruct}
+      # Uncomment and set to use a quantization backend (needs a
+      # pre-quantized checkpoint for gptq/awq; bitsandbytes quantizes
+      # on load):
+      # - QUANTIZE=bitsandbytes
+    shm_size: "1g"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1          # increase for multi-GPU tensor parallelism
+              capabilities: [gpu]
+    command:
+      - "--model-id"
+      - "${MODEL_ID:-meta-llama/Llama-3.2-1B-Instruct}"
+      # - "--num-shard"
+      # - "2"                  # tensor-parallel across 2 GPUs
+      # - "--quantize"
+      # - "bitsandbytes"

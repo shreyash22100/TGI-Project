@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TGI LLM Serving Dashboard</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-title">TGI LLM Serving</div>
+      <div class="brand-subtitle">Dashboard</div>
+    </div>
+    <nav>
+      <button class="nav-btn active" data-tab="dashboard">📊 Dashboard</button>
+      <button class="nav-btn" data-tab="generate">✍️ Text Generation</button>
+      <button class="nav-btn" data-tab="batching">📦 Batching Demo</button>
+      <button class="nav-btn" data-tab="concepts">📘 TGI Concepts</button>
+      <button class="nav-btn" data-tab="api">🔌 API Demo</button>
+      <button class="nav-btn" data-tab="architecture">🏗️ Architecture</button>
+    </nav>
+    <div class="mode-badge" id="modeBadge">CPU / DEMO MODE</div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="content">
+
+    <!-- Dashboard -->
+    <section id="dashboard" class="tab active">
+      <h1>TGI LLM Serving Dashboard</h1>
+      <p class="lead">A working demonstration of Hugging Face Text Generation Inference (TGI) serving concepts. Currently running in <strong>CPU/Demo Mode</strong> — see the Architecture tab for how this maps to real TGI.</p>
+
+      <div class="card-grid">
+        <div class="stat-card">
+          <div class="stat-label">Server Status</div>
+          <div class="stat-value" id="statServerStatus">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Model</div>
+          <div class="stat-value small" id="statModel">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Requests</div>
+          <div class="stat-value" id="statRequests">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg. Latency</div>
+          <div class="stat-value" id="statLatency">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg. Tokens/sec</div>
+          <div class="stat-value" id="statTps">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Uptime</div>
+          <div class="stat-value" id="statUptime">—</div>
+        </div>
+      </div>
+
+      <button class="btn" id="refreshMetricsBtn">Refresh Metrics</button>
+    </section>
+
+    <!-- Text Generation -->
+    <section id="generate" class="tab">
+      <h1>Text Generation</h1>
+      <p class="lead">Prompts stream back token-by-token in real time, using the same idea as TGI's Server-Sent Events streaming.</p>
+
+      <label for="promptInput">Prompt</label>
+      <textarea id="promptInput" rows="4" placeholder="Type a prompt, e.g. 'The future of AI is'"></textarea>
+
+      <div class="row">
+        <label class="inline">Max new tokens
+          <input type="number" id="maxTokensInput" value="40" min="1" max="200" />
+        </label>
+        <label class="inline"><input type="checkbox" id="streamToggle" checked /> Stream output</label>
+      </div>
+
+      <button class="btn" id="generateBtn">Generate</button>
+
+      <h3>Output</h3>
+      <div class="output-box" id="generateOutput">Output will appear here…</div>
+
+      <div class="stats-inline" id="generateStats"></div>
+    </section>
+
+    <!-- Batching Demo -->
+    <section id="batching" class="tab">
+      <h1>Batching Demo</h1>
+      <p class="lead">Compares <strong>sequential</strong> processing (one request at a time — normal inference) against <strong>batched / continuous-batching-style</strong> processing (multiple requests handled together — LLM serving).</p>
+
+      <label for="batchPrompts">Prompts (one per line, 2–6 recommended)</label>
+      <textarea id="batchPrompts" rows="5">Tell me about the sky.
+What is your favourite season?
+Describe a quiet morning.
+Explain gravity simply.</textarea>
+
+      <div class="row">
+        <button class="btn" id="runSequentialBtn">Run Sequential</button>
+        <button class="btn btn-secondary" id="runBatchedBtn">Run Batched</button>
+      </div>
+
+      <div id="batchResults"></div>
+    </section>
+
+    <!-- TGI Concepts -->
+    <section id="concepts" class="tab">
+      <h1>TGI Concepts</h1>
+      <p class="lead">Short explanations of the core ideas this dashboard demonstrates.</p>
+      <div class="concept-grid" id="conceptGrid"></div>
+    </section>
+
+    <!-- API Demo -->
+    <section id="api" class="tab">
+      <h1>API Demo</h1>
+      <p class="lead">This backend exposes an <strong>OpenAI-compatible</strong> endpoint, the same pattern real TGI uses, so existing OpenAI-SDK client code can point at it with minimal changes.</p>
+
+      <h3>Endpoint</h3>
+      <code class="code-line">POST /v1/chat/completions</code>
+
+      <h3>Example Request</h3>
+      <pre class="code-block" id="apiRequestExample"></pre>
+
+      <h3>Example Response</h3>
+      <pre class="code-block" id="apiResponseExample">Click "Try it live" to call the real backend.</pre>
+
+      <button class="btn" id="tryApiBtn">Try it live</button>
+
+      <h3>Other Endpoints</h3>
+      <table class="endpoint-table">
+        <tr><th>Method</th><th>Path</th><th>Purpose</th></tr>
+        <tr><td>GET</td><td>/health</td><td>Server + model readiness</td></tr>
+        <tr><td>GET</td><td>/metrics</td><td>Request count, latency, tokens/sec</td></tr>
+        <tr><td>POST</td><td>/generate</td><td>Plain or streaming generation</td></tr>
+        <tr><td>POST</td><td>/v1/chat/completions</td><td>OpenAI-compatible chat endpoint</td></tr>
+        <tr><td>POST</td><td>/batch/demo</td><td>Sequential vs batched comparison</td></tr>
+        <tr><td>POST</td><td>/demo/kv-cache</td><td>KV cache on/off comparison</td></tr>
+        <tr><td>POST</td><td>/demo/quantization</td><td>FP32 vs INT8 comparison</td></tr>
+      </table>
+    </section>
+
+    <!-- Architecture -->
+    <section id="architecture" class="tab">
+      <h1>Architecture</h1>
+      <p class="lead">How this project's CPU/demo mode maps to real TGI's architecture.</p>
+
+      <div class="arch-diagram" id="archDiagram"></div>
+
+      <h3>Real TGI (Docker + GPU)</h3>
+      <p>User → Router (Rust, request queueing + continuous-batching scheduler) → Launcher-managed Model Server(s) (Python/PyTorch, optionally tensor-parallel across multiple GPUs via NCCL) → LLM → streamed tokens back to User.</p>
+
+      <h3>This Project's Demo Mode</h3>
+      <p>User → FastAPI app (plays the role of Router + Launcher) → model_service.py (plays the role of the Model Server) → Hugging Face Transformers model on CPU → streamed tokens back to User.</p>
+    </section>
+
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

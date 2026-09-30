@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Env / secrets
+.env
+
+# Hugging Face model cache (large, re-downloadable)
+.cache/
+**/hf_cache/
+
+# Node (if a React/Vite frontend is added later)
+node_modules/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+tgi/data/
+
+# Test / coverage
+.pytest_cache/
+htmlcov/
+.coverage

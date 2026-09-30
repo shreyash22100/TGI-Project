@@ -1,0 +1,14 @@
+# Version pins removed (kept flexible) so pip can install versions that
+# actually have prebuilt wheels for whatever Python version you're running,
+# instead of failing on old exact pins. Tested to resolve against modern
+# pip/Python; if a specific package still fails to build on a very new
+# Python release, see README.md's Troubleshooting section for the
+# Python-3.11/3.12 fallback option.
+fastapi
+uvicorn[standard]
+transformers
+torch
+python-dotenv
+pydantic
+httpx
+pytest
